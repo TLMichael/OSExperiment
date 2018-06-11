@@ -52,7 +52,7 @@ void *consume(void *arg)
 		item = get_item();
 		printf("	consume item: %c\n", item);
 
-		pthread_cond_signal(&wait_full_buffer);
+		pthread_cond_signal(&wait_empty_buffer);
 		pthread_mutex_unlock(&mutex);
 	}
 	return NULL;

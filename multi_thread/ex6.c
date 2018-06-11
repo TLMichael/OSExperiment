@@ -11,7 +11,7 @@ void *compute(void *arg)
 	{
 		pthread_mutex_lock(&mutex);
 		global++;
-		pthread_mutex_lock(&mutex);
+		pthread_mutex_unlock(&mutex);
 	}
 	return NULL;
 }
