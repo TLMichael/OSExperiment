@@ -34,7 +34,7 @@ void put_item(int item)
 
 typedef struct {
     int value;
-    pthread_mutex_T mutex;
+    pthread_mutex_t mutex;
     pthread_cond_t cond;
 } sema_t;
 
