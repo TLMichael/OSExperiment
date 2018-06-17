@@ -46,7 +46,7 @@ void *consume(void *arg)
 	for(i = 0; i < ITEM_COUNT; i++)
 	{
 		pthread_mutex_lock(&mutex);
-		while(buffer_is_empty())
+		if(buffer_is_empty())
 			pthread_cond_wait(&wait_full_buffer, &mutex);
 
 		item = get_item();
@@ -66,7 +66,7 @@ void *produce(void *arg)
 	for(i = 0; i < ITEM_COUNT; i++)
 	{
 		pthread_mutex_lock(&mutex);
-		while(buffer_is_full())
+		if(buffer_is_full())
 			pthread_cond_wait(&wait_empty_buffer, &mutex);
 
 		item = 'a' + i;
