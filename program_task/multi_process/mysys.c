@@ -2,49 +2,78 @@
 #include <unistd.h>
 #include <string.h>
 
+#define MAX_BUFFLEN	1024
+#define MAX_NUM 100
+
 int mysys(char *arg)
 {
-    char code[1024];
-    char *argv[100];    //no more than 100 arguments
-    int count = 0;      //n.o. of arguments
-    strcpy(code, arg);
-    //printf("code = %s\n", code);
-    char *next = strchr(code, ' ');
-    char *rest = next + 1;
-    next[0] = '\0';
+	if(arg[0] == '\0')
+		return 127;
 
-    printf("code = \"%s\"\n", code);
-    printf("rest = \"%s\"\n", rest);
-    
+    char code[MAX_BUFFLEN];
+    char *argv[MAX_NUM];    // no more than 100 arguments
+    int count = 0;      // N.O. of arguments
+	char *next = NULL;
+	char *rest = code;
+
+	strcpy(code, arg);
+
+	argv[count++] = code;
+
     while(next = strchr(rest, ' '))
     {
         next[0] = '\0';
         rest = next + 1;
-        printf("rest = \"%s\"\n", rest);
+        // printf("rest = \"%s\"\n", rest);
         
         if(rest[0] != '\0' && rest[0] != ' ')
             argv[count++] = rest;
+        if(count + 2 > MAX_NUM)
+            return 127;
     }
-    
-    printf("[argv]\n");
-    for(int i = 0; i < count; i++)
-        printf("[%d] %s\n", i, argv[i]);
 
-    return 0;
+    argv[count++] = NULL;
+
+    // printf("[argv]\n");
+    // for(size_t i = 0; i < count; i++)
+    //     printf("\t[%d] %s\n", i, argv[i]);
+
+	int pid;
+	pid = fork();
+	if(pid == 0)
+	{
+		int error = execvp(code, argv);
+		if(error < 0)
+		{
+			perror("execvp");
+			return 127;
+		}
+		else
+			return 0;
+	}
+
+	int status;
+	wait(&status);
+	return status;
 }
 
 int main()
 {
-    mysys("echo  ,HELLO  WORLD ,  sdfa sdfadf        ss   ");
-    mysys("echo  ");
-    mysys("echo ");
+	//char *argv[] = {"ls", "/", NULL};
+	//execvp("ls", argv);
+
+    mysys("echo ,HELLO  WORLD ,  sdfa sdfadf        ss   ");
+    mysys("echo /G");
+    mysys("echo ,,");
     mysys("echo");
 
+    mysys("asdfasdf");
+
 
     printf("----------------------------------------------------------\n");
-    system("echo HELLO WORLD");
+    mysys("echo HELLO WORLD");
     printf("----------------------------------------------------------\n");
-    system("ls /");
+    mysys("ls /");
     printf("----------------------------------------------------------\n");
 
     return 0;
