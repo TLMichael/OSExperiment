@@ -15,6 +15,9 @@ char *home;
 char *dir;
 int recover_in;
 int recover_out;
+int fdin, fdout;
+int fd[2], fdn[2];
+int flag;
 
 void split(char *src, int *argc, char **argv)
 {
@@ -51,6 +54,11 @@ int mysys(const char *cmdstring)
         status = -1;  
     else if (pid == 0)  
     {  
+		dup2(fdin, 0);
+		dup2(fdout, 1);
+
+		close(fdin);
+		close(fdout);
         execl("/bin/sh", "sh", "-c", cmdstring, (char *)0);  
         exit(127);  
     }  
@@ -64,11 +72,7 @@ int mysys(const char *cmdstring)
                break;  
             }  
         }  
-    }  
-	
-	//恢复重定向
-	dup2(recover_in, 0);
-	dup2(recover_out, 1);
+    }
     return status;  
 }
 
@@ -154,6 +158,19 @@ void strip_dup(char *s)
     }
 }
 
+void strip_pipe(char *s)
+{
+	size_t i;
+    size_t len = strlen(s);
+
+    for(i = 0; i < len; ++i)
+	{
+        char c = s[i];
+        if(c == '|')
+			s[i] = '\0';
+    }
+}
+
 int go_dup(char *buff)
 {
 	char code[MAX_BUFFLEN];
@@ -174,7 +191,7 @@ int go_dup(char *buff)
 		// printf("[in] %s\n", in);
 		// printf("[out]%s\n", out);
 		// printf("[code]%s\n", code);
-		int fdin, fdout;
+		
 		fdin = open(in, O_RDWR, 0666);
 		fdout = open(out, O_CREAT|O_RDWR, 0666);
 		if(fdin == -1)
@@ -187,37 +204,132 @@ int go_dup(char *buff)
 			printf("File %s open faild\n", out);
 			return -1;
 		}
-		dup2(fdin, 0);
-		dup2(fdout, 1);
-		close(fdin);
-		close(fdout);
+		
 		return mysys(code);
 	}
 	else if(a != NULL)
 	{
 		char *in = a + 1 - buff + code;
 		strip_char(in, ' ');
-		int fdin;
+		
 		fdin = open(in, O_RDWR, 0666);
-		dup2(fdin, 0);
-		close(fdin);
+		fdout = recover_out;
+		if(fdin == -1)
+		{
+			printf("File %s open faild\n", in);
+			return -1;
+		}
 		return mysys(code);
 	}
 	else if(b != NULL)
 	{
 		char *out = b + 1 - buff + code;
 		strip_char(out, ' ');
-		int fdout;
+
+		fdin = recover_in;
 		fdout = open(out, O_CREAT|O_RDWR, 0666);
-		dup2(fdout, 1);
-		close(fdout);
+		if(fdout == -1)
+		{
+			printf("File %s open faild\n", out);
+			return -1;
+		}
 		return mysys(code);
 	}
 	else
 	{
+		fdin = recover_in;
+		fdout = recover_out;
 		return go(buff);
 	}
 
+}
+
+int count_pipe(char *buff, int loc[])
+{
+	char *next = buff;
+	int count = 0;
+	loc[count++] = 0;
+	while(next = strchr(next, '|'))
+	{
+		//printf("[next] %s\n", next);
+		next = next + 1;
+		loc[count++] = next - buff;
+	}
+		
+	return count;
+}
+
+int pipe_sys(const char *cmdstring)
+{
+	pid_t pid;  
+      
+    pid = fork();
+    if (pid == 0)  
+    {  
+		if(flag == 0)
+		{
+			dup2(fd[1], 1);
+			close(fd[0]);
+			close(fd[1]);
+			execl("/bin/sh", "sh", "-c", cmdstring, (char *)0);  
+        	exit(127); 
+		}
+		else if(flag == 1)
+		{
+			dup2(fd[0], 0);
+			dup2(recover_out, 1);
+			close(fd[0]);
+			close(fd[1]);
+			execl("/bin/sh", "sh", "-c", cmdstring, (char *)0);  
+        	exit(127); 
+		}
+    }
+	
+    return 0;  
+}
+
+int go_pipe(char *buff)
+{
+	
+
+	int res;
+	char code[MAX_BUFFLEN];
+	strcpy(code, buff);
+	strip_pipe(code);
+	int loc[MAX_NUM];
+	int count = count_pipe(buff, loc);
+	printf("[debug] count: %d\n", count);
+	if(count == 1)
+	{
+		fdin = recover_in;
+		fdout = recover_out;
+		return go_dup(buff);
+	}
+		
+	for(int i = 0; i < count; i++)
+	{
+		printf("[debug] %d pipe: %s\n", i, code+loc[i]);
+		if(flag == 2)
+		{
+			fd[0] = fdn[0];
+			fd[1] = fdn[1];
+		}
+		if(i == 0)
+		{
+			flag = 0;
+		}
+		else if(i == count - 1)
+		{
+			flag = 1;
+		}
+		else
+		{
+			flag = 2;
+		}
+		res = pipe_sys(code + loc[i]);
+	}
+
+	return res;
 }
 
 void print_prefix()
@@ -229,10 +341,12 @@ void print_prefix()
 }
 
 int main()
-{
+{	
+	pipe(fd);
+	pipe(fdn);
+
 	recover_in = dup(0);
 	recover_out = dup(1);
-
 	home = getenv("HOME");
 	dir = getcwd(NULL, 0);
 	char buff[MAX_BUFFLEN];
@@ -240,21 +354,10 @@ int main()
 	print_prefix();
 	while(gets(buff))
 	{
-		go_dup(buff);
-
+		go_pipe(buff);
 		
 		print_prefix();
 	}
-
-
-
-	mysys("pwd");
-    mysys("echo ,HELLO  WORLD ,  sdfa sdfadf        ss   ");
-    mysys("echo /G");
-    mysys("echo ,,");
-    mysys("echo");
-
-
 
     return 0;
 }
