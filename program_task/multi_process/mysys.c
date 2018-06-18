@@ -61,7 +61,7 @@ int main()
 {
 	//char *argv[] = {"ls", "/", NULL};
 	//execvp("ls", argv);
-
+	mysys("pwd");
     mysys("echo ,HELLO  WORLD ,  sdfa sdfadf        ss   ");
     mysys("echo /G");
     mysys("echo ,,");
