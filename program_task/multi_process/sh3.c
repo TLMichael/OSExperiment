@@ -16,7 +16,7 @@ char *dir;
 int recover_in;
 int recover_out;
 int fdin, fdout;
-int fd[2], fdn[2];
+int fd[2], fd_tmp[2];
 int flag;
 
 void split(char *src, int *argc, char **argv)
@@ -78,6 +78,7 @@ int mysys(const char *cmdstring)
 
 int judge_buff(char *buff)
 {
+	//printf("In judge: [%s]\n", buff);
 	if(buff[0] == '\0')
 		return 0;
 	char code[MAX_BUFFLEN];
@@ -89,7 +90,11 @@ int judge_buff(char *buff)
 	if(strcmp(code, "cd") == 0)
 		return 1;
 	else if(strcmp(code, "exit") == 0)
-		exit(0);
+	{
+		//printf("In judge: [%s]\n", buff);
+		exit(-1);
+
+	}
 	else 
 		return 0;
 }
@@ -127,9 +132,22 @@ int go(char *buff)
 		mysys(buff);
 	else if(res == 1)
 		cd(buff);
-	else if(res == 2)
-		return 2;
+	else if(res == -1)
+		return -1;
 	return 1;
+}
+
+void strip(char *s)
+{
+    size_t i;
+    size_t len = strlen(s);
+    size_t offset = 0;
+    for(i = 0; i < len; ++i){
+        char c = s[i];
+        if(c==0x0d||c==0x0a) ++offset;
+        else s[i-offset] = c;
+    }
+    s[len-offset] = '\0';
 }
 
 void strip_char(char *s, char bad)
@@ -268,6 +286,8 @@ int pipe_sys(const char *cmdstring)
     {  
 		if(flag == 0)
 		{
+            //printf("[flag] %d\t[code] %s\n", flag, cmdstring);
+
 			dup2(fd[1], 1);
 			close(fd[0]);
 			close(fd[1]);
@@ -276,15 +296,31 @@ int pipe_sys(const char *cmdstring)
 		}
 		else if(flag == 1)
 		{
+            //printf("[flag] %d\t[code] %s\n", flag, cmdstring);
+
 			dup2(fd[0], 0);
-			dup2(recover_out, 1);
 			close(fd[0]);
 			close(fd[1]);
 			execl("/bin/sh", "sh", "-c", cmdstring, (char *)0);  
         	exit(127); 
 		}
+        else if(flag == 2)
+        {
+            //printf("[flag] %d\t[code] %s\n", flag, cmdstring);
+
+            dup2(fd[0], 0);
+            close(fd[0]);
+            close(fd[1]);
+            // 输出进入临时管道
+            dup2(fd_tmp[1], 1);
+            close(fd_tmp[0]);
+            close(fd_tmp[1]);
+            execl("/bin/sh", "sh", "-c", cmdstring, (char *)0);  
+        	exit(127); 
+        }
     }
-	
+	//wait(NULL);
+	//printf("wait once\n");
     return 0;  
 }
 
@@ -298,7 +334,7 @@ int go_pipe(char *buff)
 	strip_pipe(code);
 	int loc[MAX_NUM];
 	int count = count_pipe(buff, loc);
-	printf("[debug] count: %d\n", count);
+	//printf("[debug] count: %d\n", count);
 	if(count == 1)
 	{
 		fdin = recover_in;
@@ -308,11 +344,14 @@ int go_pipe(char *buff)
 		
 	for(int i = 0; i < count; i++)
 	{
-		printf("[debug] %d pipe: %s\n", i, code+loc[i]);
+		//printf("[debug] %d pipe: %s\n", i, code+loc[i]);
 		if(flag == 2)
 		{
-			fd[0] = fdn[0];
-			fd[1] = fdn[1];
+			dup2(fd_tmp[0], fd[0]);
+			dup2(fd_tmp[1], fd[1]);
+			close(fd_tmp[0]);
+			close(fd_tmp[1]);
+			pipe(fd_tmp);
 		}
 		if(i == 0)
 		{
@@ -337,13 +376,13 @@ void print_prefix()
 	if(strcmp(home, dir) == 0)
 		printf("[~]$ ");
 	else
-		printf("[%s]$ ", dir);
+		printf("[!]$ ");
 }
 
 int main()
 {	
 	pipe(fd);
-	pipe(fdn);
+	pipe(fd_tmp);
 
 	recover_in = dup(0);
 	recover_out = dup(1);
@@ -351,9 +390,12 @@ int main()
 	dir = getcwd(NULL, 0);
 	char buff[MAX_BUFFLEN];
 
+	
 	print_prefix();
-	while(gets(buff))
+	while(fgets(buff, sizeof(buff), stdin))
 	{
+		strip(buff);
+
 		go_pipe(buff);
 		
 		print_prefix();

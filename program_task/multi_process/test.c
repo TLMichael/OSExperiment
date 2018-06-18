@@ -76,8 +76,10 @@ int pipe_sys(const char *cmdstring)
             execl("/bin/sh", "sh", "-c", cmdstring, (char *)0);  
         	exit(127); 
         }
-        wait(NULL);
     }  
+
+    //wait(NULL);
+    printf("wait once\n");
     return 0;  
 }
 
@@ -86,28 +88,37 @@ int main()
     pipe(fd);
     pipe(fd_tmp);
 
-	flag = 0;
-	pipe_sys("cat < input.txt");
 
-	flag = 2;
-	pipe_sys("sort");
-    // 将临时管道变成正式的管道
-    dup2(fd_tmp[0], fd[0]);
-    dup2(fd_tmp[1], fd[1]);
-    close(fd_tmp[0]);
-    close(fd_tmp[1]);
-    pipe(fd_tmp);
- 
-    flag = 2;
-    pipe_sys("uniq");
-    dup2(fd_tmp[0], fd[0]);
-    dup2(fd_tmp[1], fd[1]);
-    close(fd_tmp[0]);
-    close(fd_tmp[1]);
-    pipe(fd_tmp);
-
+    flag = 0;
+    pipe_sys("cat /etc/passwd");
     flag = 1;
-    pipe_sys("cat >output.txt");
+    pipe_sys("wc -l");
+
+
+
+
+	// flag = 0;
+	// pipe_sys("cat < input.txt");
+
+	// flag = 2;
+	// pipe_sys("sort");
+    // // 将临时管道变成正式的管道
+    // dup2(fd_tmp[0], fd[0]);
+    // dup2(fd_tmp[1], fd[1]);
+    // close(fd_tmp[0]);
+    // close(fd_tmp[1]);
+    // pipe(fd_tmp);
+ 
+    // flag = 1;
+    // pipe_sys("uniq");
+    // dup2(fd_tmp[0], fd[0]);
+    // dup2(fd_tmp[1], fd[1]);
+    // close(fd_tmp[0]);
+    // close(fd_tmp[1]);
+    // pipe(fd_tmp);
+
+    // flag = 1;
+    // pipe_sys("cat >output.txt");
 
 
     // flag = 0;
