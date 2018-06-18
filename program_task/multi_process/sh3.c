@@ -17,7 +17,7 @@ int recover_in;
 int recover_out;
 int fdin, fdout;
 int fd[2], fd_tmp[2];
-int flag;
+int flag = -1;
 
 void split(char *src, int *argc, char **argv)
 {
@@ -319,7 +319,7 @@ int pipe_sys(const char *cmdstring)
         	exit(127); 
         }
     }
-	//wait(NULL);
+	wait(NULL);
 	//printf("wait once\n");
     return 0;  
 }
@@ -352,6 +352,11 @@ int go_pipe(char *buff)
 			close(fd_tmp[0]);
 			close(fd_tmp[1]);
 			pipe(fd_tmp);
+			close(fd[1]);
+		}
+		if(flag == 0)
+		{
+			close(fd[1]);
 		}
 		if(i == 0)
 		{
@@ -368,6 +373,10 @@ int go_pipe(char *buff)
 		res = pipe_sys(code + loc[i]);
 	}
 
+	// close(fd[0]);
+	// close(fd[1]);
+	// close(fd_tmp[0]);
+	// close(fd_tmp[1]);
 	return res;
 }
 
@@ -398,6 +407,8 @@ int main()
 
 		go_pipe(buff);
 		
+		pipe(fd);
+		pipe(fd_tmp);
 		print_prefix();
 	}
 
