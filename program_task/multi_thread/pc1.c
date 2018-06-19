@@ -67,16 +67,64 @@ pthread_cond_t wait_full_buffer1, wait_full_buffer2;
 
 void *consume(void *arg)
 {
+    int item;
+    for(int i = 0; i < ITEM_COUNT; i++)
+    {
+        pthread_mutex_lock(&mutex2);
+        while(buffer_is_empty(2))
+            pthread_cond_wait(&wait_full_buffer2, &mutex2);
+        
+        item = get_item(2);
+        printf("consume item: %c\n", item);
+
+        pthread_cond_signal(&wait_empty_buffer2);
+        pthread_mutex_unlock(&mutex2);
+    }
     return NULL;
 }
 
 void *compute(void *arg)
 {
+    char item;
+    for(int i = 0; i < ITEM_COUNT; i++)
+    {
+        pthread_mutex_lock(&mutex1);
+        while(buffer_is_empty(1))
+            pthread_cond_wait(&wait_full_buffer1, &mutex1);
+        item = get_item(1);
+        pthread_cond_signal(&wait_empty_buffer1);
+        pthread_mutex_unlock(&mutex1);
+
+        item += 'A' - 'a';
+
+        pthread_mutex_lock(&mutex2);
+        while(buffer_is_full(2))
+            pthread_cond_wait(&wait_empty_buffer2, &mutex2);
+        put_item(item, 2);
+        printf("compute item: %c\n", item);
+
+        pthread_cond_signal(&wait_full_buffer2);
+        pthread_mutex_unlock(&mutex2);
+
+    }
     return NULL;
 }
 
 void *produce(void *arg)
 {
+    char item;
+    for(int i = 0; i < ITEM_COUNT; i++)
+    {
+        pthread_mutex_lock(&mutex1);
+        while(buffer_is_full(1))
+            pthread_cond_wait(&wait_empty_buffer1, &mutex1);
+        item = 'a' + i;
+        put_item(item, 1);
+        printf("produce item: %c\n", item);
+
+        pthread_cond_signal(&wait_full_buffer1);
+        pthread_mutex_unlock(&mutex1);
+    }
     return NULL;
 }
 
