@@ -380,12 +380,33 @@ int go_pipe(char *buff)
 	return res;
 }
 
-void print_prefix()
+void find_last_dir(char **now)
 {
-	if(strcmp(home, dir) == 0)
-		printf("[~]$ ");
+	char *next = NULL;
+	char *rest = dir;
+	printf("[dir] %s\n", dir);
+	while(next = strchr(rest, '/'))
+		rest = next + 1;
+	if(rest == '\0')
+		*now = dir;
 	else
-		printf("[!]$ ");
+		*now = rest;
+}
+
+void print_prefix()
+{	
+	
+	if(strcmp(home, dir) == 0)
+		printf("\033[33m%c  \033[34;1m~ \033[0m", '>');
+		//printf("[~]$ ");
+	else
+	{
+		char *now = NULL;
+		find_last_dir(&now);
+		printf("\033[33m%c  \033[34;1m%s \033[0m", '>', now);
+		//printf("[!]$ ");
+	}
+		
 }
 
 int main()
