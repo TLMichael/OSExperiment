@@ -75,7 +75,7 @@ void *consume(void *arg)
             pthread_cond_wait(&wait_full_buffer2, &mutex2);
         
         item = get_item(2);
-        printf("consume item: %c\n", item);
+        printf("\033[34m consume item: %c\n\033[0m", item);     //蓝色为消费者
 
         pthread_cond_signal(&wait_empty_buffer2);
         pthread_mutex_unlock(&mutex2);
@@ -101,7 +101,7 @@ void *compute(void *arg)
         while(buffer_is_full(2))
             pthread_cond_wait(&wait_empty_buffer2, &mutex2);
         put_item(item, 2);
-        printf("compute item: %c\n", item);
+        printf("\033[33m compute item: %c\n\033[0m", item);     //黄色为计算者
 
         pthread_cond_signal(&wait_full_buffer2);
         pthread_mutex_unlock(&mutex2);
@@ -120,7 +120,7 @@ void *produce(void *arg)
             pthread_cond_wait(&wait_empty_buffer1, &mutex1);
         item = 'a' + i;
         put_item(item, 1);
-        printf("produce item: %c\n", item);
+        printf("\033[31m produce item: %c\n\033[0m", item);     //红色为生产者
 
         pthread_cond_signal(&wait_full_buffer1);
         pthread_mutex_unlock(&mutex1);
