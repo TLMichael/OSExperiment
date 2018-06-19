@@ -48,9 +48,9 @@ void sema_init(sema_t *sema, int value)
 void sema_wait(sema_t *sema)
 {
     pthread_mutex_lock(&(sema->mutex));
-    sema->value--;
-    while(sema->value < 0)
+    while(sema->value <= 0)
         pthread_cond_wait(&(sema->cond), &(sema->mutex));
+    sema->value--;
     pthread_mutex_unlock(&(sema->mutex));
 }
 
@@ -100,6 +100,7 @@ void *produce()
 
         item = i + 'a';
         put_item(item);
+        printf("produce item: %c\n", item); 
         
         sema_signal(&mutex_sema);
         sema_signal(&full_buffer_sema);
