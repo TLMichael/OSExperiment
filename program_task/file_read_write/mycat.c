@@ -18,13 +18,13 @@ int main(int argc, char** argv)
 	else
 	{
 		char *filename;
-		FILE *infile;
+		int infile;
 		for(int i = 1; i < argc; i++)
 		{
 			filename = argv[i];
 			if((infile = open(argv[1], O_RDONLY)) == -1)
 			{
-				printf("\nmycat: %s: No such file or directory\n", filename);
+				printf("mycat: %s: No such file or directory\n", filename);
 				continue;
 			}
 			copy_file(infile, stdout);
