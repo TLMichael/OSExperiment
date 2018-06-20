@@ -2,6 +2,7 @@
 #include<string.h>
 #include<stdlib.h>
 #include<fcntl.h>
+#include<unistd.h>
 
 int copy_file(int infile, int outfile)
 {
