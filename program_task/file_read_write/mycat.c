@@ -18,11 +18,11 @@ int main(int argc, char** argv)
 	else
 	{
 		char *filename;
-		int infile;
+		FILE *infile;
 		for(int i = 1; i < argc; i++)
 		{
 			filename = argv[i];
-			if((infile = open(argv[1], O_RDONLY)) == -1)
+			if((infile = fopen(argv[1], "r")) == NULL)
 			{
 				printf("mycat: %s: No such file or directory\n", filename);
 				continue;
