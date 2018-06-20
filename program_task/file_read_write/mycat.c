@@ -1,4 +1,5 @@
 #include<stdio.h>
+#include<fcntl.h>
 
 int copy_file(FILE *src, FILE *dest)
 {
@@ -16,18 +17,16 @@ int main(int argc, char** argv)
 	}
 	else
 	{
-		char *filename;	//
+		char *filename;
 		FILE *infile;
-		int count = 0;
 		for(int i = 1; i < argc; i++)
 		{
 			filename = argv[i];
-			if((infile = fopen(filename, "r")) == NULL)
+			if((infile = open(argv[1], O_RDONLY)) == -1)
 			{
 				printf("\nmycat: %s: No such file or directory\n", filename);
 				continue;
 			}
-			count++;
 			copy_file(infile, stdout);
 			fclose(infile);
 		}
