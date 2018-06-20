@@ -384,7 +384,7 @@ void find_last_dir(char **now)
 {
 	char *next = NULL;
 	char *rest = dir;
-	printf("[dir] %s\n", dir);
+	//printf("[dir] %s\n", dir);
 	while(next = strchr(rest, '/'))
 		rest = next + 1;
 	if(rest == '\0')
