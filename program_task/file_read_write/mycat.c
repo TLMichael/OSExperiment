@@ -1,38 +1,36 @@
 #include<stdio.h>
-#include<string.h>
-#include<stdlib.h>
-#include<fcntl.h>
+
+int copy_file(FILE *src, FILE *dest)
+{
+	int c;
+	while((c = getc(src)) != EOF)
+		putc(c, dest);
+	return c;
+}
 
 int main(int argc, char** argv)
 {
-	int infile, outfile;
-	char buf[1024];
-	int num;
-	if(argc != 3)
+	if(argc == 1)
 	{
-		printf("The format must be:cp file_src file_des");
-		exit(0);
+		copy_file(stdin, stdout);
 	}
-
-	if((infile = open(argv[1], O_RDONLY)) == -1)
+	else
 	{
-		perror("open1");
-		exit(0);
+		char *filename;	//
+		FILE *infile;
+		int count = 0;
+		for(int i = 1; i < argc; i++)
+		{
+			filename = argv[i];
+			if((infile = fopen(filename, "r")) == NULL)
+			{
+				printf("\nmycp: %s: No such file or directory\n", filename);
+				continue;
+			}
+			count++;
+			copy_file(infile, stdout);
+			fclose(infile);
+		}
 	}
-
-	if((outfile = open(argv[2], O_CREAT | O_EXCL | O_WRONLY, 0644)) == -1)
-	{
-		perror("open2");
-		exit(0);
-	}
-
-	do
-	{
-		num = read(infile, buf, 1024);
-		write(outfile, buf, num);
-	}while(num == 1024);
-
-	close(infile);
-	close(outfile);
 	return 0;
 }
