@@ -24,7 +24,7 @@ int main(int argc, char** argv)
 			filename = argv[i];
 			if((infile = fopen(filename, "r")) == NULL)
 			{
-				printf("\nmycp: %s: No such file or directory\n", filename);
+				printf("\nmycat: %s: No such file or directory\n", filename);
 				continue;
 			}
 			count++;
