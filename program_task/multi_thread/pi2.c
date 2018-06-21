@@ -33,7 +33,7 @@ void *compute(void *arg)
 	for(int i = param->start; i < param->end; i++)
 		sum += (float)sign(i) / (2 * i + 1);
 	
-	printf("sum = %.10f\n", sum);
+	printf("worker %d = %.10f\n", param->start / NR_CHILD, sum);
 	result = malloc(sizeof(Result));
 	result->sum = sum;
 	return result;
