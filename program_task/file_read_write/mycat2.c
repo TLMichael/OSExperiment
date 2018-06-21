@@ -12,6 +12,7 @@ int copy_file(int infile, int outfile)
         num = read(infile, buf, 1);
         write(outfile, buf, num);
     }while(num == 1);
+    return num;
 }
 
 int main(int argc, char** argv)
@@ -30,6 +31,7 @@ int main(int argc, char** argv)
             if((infile = open(argv[1], O_RDONLY)) == -1)
             {
                 printf("mycat: %s: No such file or directory\n", filename);
+                close(infile);
                 continue;
             }
             copy_file(infile, 1);
