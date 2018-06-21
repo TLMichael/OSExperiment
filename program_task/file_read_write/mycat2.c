@@ -28,10 +28,9 @@ int main(int argc, char** argv)
         for(int i = 1; i < argc; i++)
         {
             filename = argv[i];
-            if((infile = open(argv[1], O_RDONLY)) == -1)
+            if((infile = open(argv[i], O_RDONLY)) == -1)
             {
                 printf("mycat: %s: No such file or directory\n", filename);
-                close(infile);
                 continue;
             }
             copy_file(infile, 1);
