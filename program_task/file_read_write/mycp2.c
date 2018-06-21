@@ -20,7 +20,7 @@ int main(int argc, char** argv)
 
     if(argc != 3)
     {
-        printf("The format must be:cp file_src file_des");
+        printf("The format must be:cp file_src file_des\n");
 		exit(0);
     }
     if((infile = open(argv[1], O_RDONLY)) == -1)
