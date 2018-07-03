@@ -1,8 +1,192 @@
 #include <iostream>
+#include <iomanip>
+using namespace std;
 
-//å…¨å±€å˜é‡å®šä¹‰
-int Available[100];     //å¯åˆ©ç”¨èµ„æºæ•°ç»„
-int Max[50][100];       //æœ€å¤§éœ€æ±‚çŸ©é˜µ
-int Allocation[50][100];//åˆ†é…çŸ©é˜µ
-int Need[50][100];      //éœ€æ±‚çŸ©é˜µ
-int Request[50][100];   //Mä¸ªè¿›ç¨‹è¿˜éœ€è¦Nç±»èµ„æºçš„èµ„æºé‡
+//È«¾Ö±äÁ¿¶¨Òå
+int Available[100];     //¿ÉÀûÓÃ×ÊÔ´Êı×é
+int Max[50][100];       //×î´óĞèÇó¾ØÕó
+int Allocation[50][100];//·ÖÅä¾ØÕó
+int Need[50][100];      //ĞèÇó¾ØÕó
+int Request[50][100];   //M¸ö½ø³Ì»¹ĞèÒªNÀà×ÊÔ´µÄ×ÊÔ´Á¿
+bool Finish[50];
+int p[50];
+int m, n;               //M¸ö½ø³Ì£¬NÀà×ÊÔ´
+
+//°²È«ĞÔËã·¨
+int Safe()
+{
+    int i, j, k, l = 0;
+    int Work[100];
+    for(i = 0; i < n; i++)
+        Work[i] = Available[i];
+    for(i = 0; i < m; i++)
+        Finish[i] = false;
+    for(i = 0; i < m; i++)
+    {
+        if(Finish[i] == true)
+            continue;
+        for(j = 0; j < n; j++)
+        {
+            if(Need[i][j] > Work[j])
+                break;
+        }
+        if(j != n)
+            continue;   //²»Âú×ãNeed < Work
+        Finish[i] = true;
+        for(k = 0; k < n; k++)
+            Work[k] += Allocation[i][k];
+        p[l++] = i;
+        i = -1;        
+    }
+
+    if(l == m)
+    {
+        cout << "ÏµÍ³ÊÇ°²È«µÄ" << endl;
+        cout << "°²È«ĞòÁĞ£º";
+        for(i = 0; i < l; i++)
+        {
+            cout << "[" << p[i] << "] ";
+        }
+        cout << endl;
+        return true;
+    }
+    else
+    {
+        cout << "°²È«ĞòÁĞ²»´æÔÚ" << endl;
+        return false;
+    }
+}
+
+// Banker's Algorithm
+int main()
+{
+    int i, j, mi;
+
+    // ¶¨Òå½ø³ÌµÄÊıÄ¿ºÍ×ÊÔ´µÄÖÖÀà
+    m = 5;
+    n = 3;
+    // ¶¨Òå×î´óĞèÇó¾ØÕó
+    int tmp[5][3] = {
+        {7, 5, 3},
+        {3, 2, 2},
+        {9, 0, 2},
+        {2, 2, 2},
+        {4, 3, 3}
+    };
+    // ¶¨Òå·ÖÅä¾ØÕó
+    int tmp2[5][3] = {
+        {0, 1, 0},
+        {2, 0, 0},
+        {3, 0, 2},
+        {2, 1, 1},
+        {0, 0, 2}
+    };
+    // ¶¨Òå¿ÉÀûÓÃ×ÊÔ´ÏòÁ¿
+    int tmp3[3] = {3, 3, 2};
+
+    for(i = 0; i < m; i++)
+    {
+        Available[i] = tmp3[i];
+        for(j = 0; j < n; j++)
+        {
+            Max[i][j] = tmp[i][j];
+            Allocation[i][j] = tmp2[i][j];
+            Need[i][j] = Max[i][j] - Allocation[i][j];
+        }
+    }
+    
+    // Êä³öµ±Ç°×´Ì¬
+    cout << "[Max]" << endl;
+    for(i = 0; i < m; i++)
+    {
+        cout << "\t";
+        for(j = 0; j < n; j++)
+            cout << setw(5) << Max[i][j];
+        cout << endl;
+    }
+    cout << "[Allocation]" << endl;
+    for(i = 0; i < m; i++)
+    {
+        cout << "\t";
+        for(j = 0; j < n; j++)
+            cout << setw(5) << Allocation[i][j];
+        cout << endl;
+    }
+    cout << "[Need]" << endl;
+    for(i = 0; i < m; i++)
+    {
+        cout << "\t";
+        for(j = 0; j < n; j++)
+            cout << setw(5) << Need[i][j];
+        cout << endl;
+    }
+    // ÅĞ¶Ïµ±Ç°ÏµÍ³×´Ì¬ÊÇ·ñ°²È«
+    if(!Safe())
+    {
+        cout << "ÏµÍ³²»°²È«" << endl;
+        return -1;
+    }
+    while(1)
+    {
+        cout << "ÊäÈëÒªÉêÇë×ÊÔ´µÄ½ø³ÌºÅ£º" << endl;
+        cin >> mi;
+        cout << "ÊäÈë½ø³ÌËùÇëÇóµÄ¸÷¸ö×ÊÔ´µÄÊıÁ¿" << endl;
+        for(i = 0; i < n; i++)
+            cin >> Request[mi][i];
+        for(i = 0; i < n; i++)
+        {
+            if(Request[mi][i] > Need[mi][i])
+            {
+                cout << "ËùÇëÇó×ÊÔ´Êı³¬¹ı½ø³ÌËùĞû²¼µÄ×î´óÖµ" << endl;
+                return -1;
+            }
+            if(Request[mi][i] > Available[i])
+            {
+                cout << "ÎŞ×ã¹»×ÊÔ´Âú×ã½ø³ÌĞèÇó" << endl;
+                return -1;
+            }
+        }
+        for(i = 0; i < n; i++)
+        {
+            Available[i] -= Request[mi][i];
+            Allocation[mi][i] += Request[mi][i];
+            Need[mi][i] -= Request[mi][i];
+        }
+        if(Safe())
+        {
+            cout << "Í¬Òâ·ÖÅäÇëÇó" << endl;
+        }
+        else
+        {
+            cout << "¾Ü¾ø·ÖÅäÇëÇó" << endl;
+            for(i = 0; i < n; i++)
+            {
+                Available[i] += Request[mi][i];
+                Allocation[mi][i] -= Request[mi][i];
+                Need[mi][i] += Request[mi][i];
+            }
+        }
+        char c;
+        cout << "ÊÇ·ñÔÙ´ÎÇëÇó·ÖÅä£¿y/n" << endl;
+        while(1)
+        {
+            cin >> c;
+            if(c == 'Y' || c == 'y')
+            {
+                break;
+            }
+            else if(c == 'N' || c == 'n')
+            {
+                cout << "Bye!" << endl;
+                return 0;
+            }
+            else
+            {
+                cout << "ÇëÊäÈëy/n" << endl;
+                continue;
+            }
+        }
+    }
+
+    return 0;
+}
