@@ -64,25 +64,25 @@ int main()
 
     // 定义进程的数目和资源的种类
     m = 5;
-    n = 3;
+    n = 4;
     // 定义最大需求矩阵
-    int tmp[5][3] = {
-        {7, 5, 3},
-        {3, 2, 2},
-        {9, 0, 2},
-        {2, 2, 2},
-        {4, 3, 3}
+    int tmp[5][4] = {
+        {0, 0, 1, 2},
+        {1, 7, 5, 0},
+        {2, 3, 5, 6},
+        {0, 5, 6, 2},
+        {0, 6, 5, 6}
     };
     // 定义分配矩阵
-    int tmp2[5][3] = {
-        {0, 1, 0},
-        {2, 0, 0},
-        {3, 0, 2},
-        {2, 1, 1},
-        {0, 0, 2}
+    int tmp2[5][4] = {
+        {0, 0, 1, 2},
+        {1, 0, 0, 0},
+        {1, 3, 5, 4},
+        {0, 6, 3, 2},
+        {0, 0, 1, 4}
     };
     // 定义可利用资源向量
-    int tmp3[3] = {3, 3, 2};
+    int tmp3[4] = {1, 5, 2, 0};
 
     for(i = 0; i < m; i++)
     {
@@ -120,6 +120,10 @@ int main()
             cout << setw(5) << Need[i][j];
         cout << endl;
     }
+    cout << "[Avaliable]" << endl;
+    for(j = 0; j < n; j++)
+        cout << setw(5) << Available[j];
+    cout << endl;
     // 判断当前系统状态是否安全
     if(!Safe())
     {
@@ -133,19 +137,24 @@ int main()
         cout << "输入进程所请求的各个资源的数量" << endl;
         for(i = 0; i < n; i++)
             cin >> Request[mi][i];
+        bool flag = false;
         for(i = 0; i < n; i++)
         {
             if(Request[mi][i] > Need[mi][i])
             {
                 cout << "所请求资源数超过进程所宣布的最大值" << endl;
-                return -1;
+                flag = true;
+                break;
             }
             if(Request[mi][i] > Available[i])
             {
                 cout << "无足够资源满足进程需求" << endl;
-                return -1;
+                flag = true;
+                break;
             }
         }
+        if(flag == true)
+            continue;
         for(i = 0; i < n; i++)
         {
             Available[i] -= Request[mi][i];

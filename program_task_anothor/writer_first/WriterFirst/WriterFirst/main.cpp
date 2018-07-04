@@ -6,7 +6,10 @@ using namespace std;
 
 #define P(S) WaitForSingleObject(S, INFINITE)
 #define V(S) ReleaseSemaphore(S, 1, NULL)
-// Fmutex 读者写者互斥
+// Fmutex 	读者写者互斥
+// Wmutex 	写者互斥
+// Mut1		Rcount互斥 && 竞争Fmutex
+// Mut2		Wcount互斥
 HANDLE Mut1, Mut2, Wmutex, Fmutex;
 int Rcount = 0;
 int Wcount = 0;
@@ -19,7 +22,7 @@ DWORD WINAPI writer()
 	P(Mut1);
 	Wcount += 1;
 	if (Wcount == 1)
-		P(Fmutex);
+		P(Fmutex);		// 如果有读者，写者阻塞在此处
 	V(Mut1);
 
 	P(Wmutex);
@@ -46,13 +49,13 @@ DWORD WINAPI reader()
 
 	cout << "[" << id << "]\t\t新读者出现" << endl;
 	
-	P(Mut1);
-	V(Mut1);
+	P(Mut1);	// 读者要先申请Mut1，如果有写者在等待Fmutex，则读者被阻塞，写者优先
+	V(Mut1);	// 立即释放Mut1，使写者可以随时申请到Mut1
 
 	P(Mut2);
 	Rcount += 1;
 	if (Rcount == 1)
-		P(Fmutex);
+		P(Fmutex);	// 第一个读者进入时，申请Fmutex；如果有写者，则第一个读者会阻塞在此处
 	V(Mut2);
 
 	cout << "[" << id << "]\t\t读者开始读" << endl;
@@ -64,7 +67,7 @@ DWORD WINAPI reader()
 	if (Rcount == 0)
 	{
 		cout << "[" << id << "]\t\t写着可以写" << endl;
-		V(Fmutex);
+		V(Fmutex);		// 最后一个读者退出时，释放Fmutex
 	}
 	V(Mut2);
 
